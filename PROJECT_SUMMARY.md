@@ -62,3 +62,40 @@ Our strategy has been to **harmonize** the new application with the old one by i
 -   **Familiar Look and Feel**: We have copied the base HTML template and custom CSS from the old application. This ensures that when users begin using this new system, the interface will look and feel familiar, providing a seamless transition.
 
 The eventual goal is for this new application to completely replace the old one. The small amount of data in the existing `mgml_sampledb` can be migrated into this new, superior system when it is ready for production deployment.
+
+---
+
+## Appendix: De-identification Workflow on a Secure Computer
+
+This section outlines the steps to run the de-identification process on a separate, secure computer (e.g., a hospital-approved Windows desktop).
+
+**Prerequisites:**
+- Python must be installed on the computer. You can download it from the official Python website.
+
+**Steps:**
+
+1.  **Transfer the Tool**: Copy the entire `deidentification_tool` folder from this project to the secure computer.
+
+2.  **Install Dependencies**:
+    -   Open a command prompt or PowerShell on the secure computer.
+    -   Navigate into the `deidentification_tool` folder.
+    -   Run the following command to install the necessary Python libraries:
+        ```
+        pip install -r requirements.txt
+        ```
+
+3.  **Run the Script**:
+    -   In the same command prompt, while inside the `deidentification_tool` folder, run the script:
+        ```
+        python deidentify.py
+        ```
+
+4.  **Select Files**:
+    -   A file selection window will pop up.
+    -   Navigate to the location of your Excel files, select all the files you want to process, and click "Open".
+
+5.  **Retrieve the Output**:
+    -   The script will run and create the `SECURE_linkage_key.csv` file in the main project directory (one level above `deidentification_tool`).
+    -   This file contains the mapping between the original identifiers and the new, de-identified `subject_id`s.
+
+6.  **Secure Transfer**: Securely transfer this `SECURE_linkage_key.csv` file to your main development machine and place it in the root of the `metagenome_sample_tracker` project directory. It is now ready to be used by the `run_harmonization.py` script.

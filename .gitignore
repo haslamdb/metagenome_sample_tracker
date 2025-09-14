@@ -116,3 +116,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Ignore generated data files
+SECURE_linkage_key.csv
+harmonized_deidentified_samples.tsv

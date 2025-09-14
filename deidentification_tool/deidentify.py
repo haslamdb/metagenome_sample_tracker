@@ -2,9 +2,10 @@ import pandas as pd
 import uuid
 import os
 from pathlib import Path
+import tkinter as tk
+from tkinter import filedialog
 
 # --- Configuration ---
-# This map is crucial for standardizing identifiers from different files.
 IDENTIFIER_COLUMN_MAP = {
     'MRN': 'mrn',
     'UPN': 'upn',
@@ -16,12 +17,6 @@ IDENTIFIER_COLUMN_MAP = {
 def load_all_sheets_from_files(file_paths):
     """
     Loads all sheets from a list of Excel files into a single dictionary.
-
-    Args:
-        file_paths (list): A list of string paths to the Excel files.
-
-    Returns:
-        dict: A dictionary where keys are 'filename|sheetname' and values are DataFrames.
     """
     all_dfs = {}
     for path in file_paths:
@@ -116,36 +111,36 @@ def main():
     """
     Main function to execute the de-identification process.
     """
-    # --- 1. Simulate Your Messy Excel Files ---
-    # In a real scenario, you would use `load_all_sheets_from_files`
-    # file_paths = ["/path/to/your/project_A.xlsx", "/path/to/your/project_B.xlsx"]
-    # all_dfs_to_process = load_all_sheets_from_files(file_paths)
-    
-    # For this example, we use the simulated data:
-    data_a = {'MRN': ['11223344', '11223344', '55667788'], 'Internal_ID': ['PMID-01', 'PMID-01', 'PMID-02'], 'Collection Date': ['10/05/2024', '11/15/2024', '10/08/2024'], 'Sample Type': ['Stool', 'Skin', 'stool'], 'FASTQ': ['p01_s1.fq.gz', 'p01_s2.fq.gz', 'p02_s1.fq.gz']}
-    df_a = pd.DataFrame(data_a)
-    data_b = {'UPN': ['UPN_A5', 'UPN_B9', 'UPN_B9'], 'PMID': ['PMID-03', 'PMID-04', 'PMID-04'], 'collection_dt': pd.to_datetime(['2023-11-01', '2023-11-02', '2023-12-01']), 'source': ['oral', 'stool', 'stool'], 'sequence_file': ['p03_s1.fq.gz', 'p04_s1.fq.gz', 'p04_s2.fq.gz'], 'Project': ['IBD_Cohort', 'IBD_Cohort', 'IBD_Cohort']}
-    df_b = pd.DataFrame(data_b)
-    data_c = {'patient_id': ['PMID-02', 'PMID-04', 'PMID-05'], 'sample_date': ['2024-01-20', '2024-02-15', '2024-03-10'], 'sample_type': ['stool', 'stool', 'skin'], 'filename': ['old_p02.fq.gz', 'old_p04.fq.gz', 'old_p05.fq.gz'], 'PI': ['Dr. Jones', 'Dr. Smith', 'Dr. Jones']}
-    df_c = pd.DataFrame(data_c)
-    all_dfs_raw = {
-        'clinical_research_A.xlsx|Sheet1': df_a,
-        'collab_lab_B.xlsx|2023_Samples': df_b,
-        'collab_lab_B.xlsx|2024_Samples': df_c,
-    }
+    # --- 1. Open a GUI file dialog to select Excel files ---
+    root = tk.Tk()
+    root.withdraw() # Hide the small root window
 
-    # Execute Phase 1
-    linkage_key, _ = create_identifier_linkage_key(all_dfs_raw)
+    print("Opening file dialog to select Excel files...")
+    file_paths = filedialog.askopenfilenames(
+        title="Select Excel Files for De-identification",
+        filetypes=(("Excel Files", "*.xlsx *.xls"), ("All files", "*.*"))
+    )
+
+    if not file_paths:
+        print("No files were selected. Exiting.")
+        return
+
+    # --- 2. Load and process the selected files ---
+    print(f"Processing {len(file_paths)} selected file(s)...")
+    all_dfs_to_process = load_all_sheets_from_files(file_paths)
+
+    # --- 3. Execute Phase 1 ---
+    linkage_key, _ = create_identifier_linkage_key(all_dfs_to_process)
     
     if linkage_key is not None:
-        # Save the linkage key to the project root.
-        # In a real workflow, you might save this to a more secure, designated output folder.
+        # --- 4. Save the output file ---
         output_path = Path(__file__).parent.parent / 'SECURE_linkage_key.csv'
         linkage_key.to_csv(output_path, index=False)
         
         print(f"\n--- Linkage Key Output (`{output_path}`) ---")
         print("!! WARNING: THIS FILE CONTAINS PHI AND MUST BE STORED SECURELY !!")
         print(linkage_key)
+        print("\nProcess complete. You can now securely transfer the SECURE_linkage_key.csv file.")
 
 if __name__ == "__main__":
     main()
