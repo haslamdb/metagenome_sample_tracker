@@ -1,0 +1,38 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Sample List</h1>
+  {% if crudesample_list %}
+    <table class="table table-striped table-bordered">
+      <thead class="thead-dark">
+        <tr>
+          <th>Barcode</th>
+          <th>Subject ID</th>
+          <th>Collection Date</th>
+          <th>Sample Source</th>
+          <th>Status</th>
+          <th>Project Name</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sample in crudesample_list %}
+          <tr>
+            <td>{{ sample.barcode }}</td>
+            <td>{{ sample.subject.subject_id }}</td>
+            <td>{{ sample.collection_date }}</td>
+            <td>{{ sample.get_sample_source_display }}</td>
+            <td>{{ sample.get_status_display }}</td>
+            <td>{{ sample.project_name|default_if_none:"" }}</td>
+            <td>
+              <a href="{% url 'update_crude_sample' sample.pk %}" class="btn btn-sm btn-primary">Edit</a>
+              <a href="{% url 'delete_crude_sample' sample.pk %}" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>There are no samples in the database.</p>
+  {% endif %}
+{% endblock %}
