@@ -1,101 +1,85 @@
-# Project Summary: Metagenome Sample Tracker
+# Project Summary: Unified Sample and Analysis Tracker
 
-This document summarizes the work done to create a new, robust system for tracking metagenomic samples and their associated metadata.
+This document summarizes the architecture of the unified system for end-to-end sample tracking, from wet-lab processing to bioinformatics analysis.
 
 ## 1. Overview
 
-The primary goal of this project is to replace an ad-hoc system of tracking samples in various Excel spreadsheets with a centralized, secure, and user-friendly web application. 
+The primary goal of this project is to create a single, centralized, and secure web application that tracks the entire lifecycle of a sample. This system merges the physical sample tracking capabilities of the existing `mgml_sampledb` with a new, robust system for tracking downstream analysis and data.
 
-The architecture is designed around a two-phase process to ensure that sensitive patient data is handled securely and kept separate from the main application's de-identified data.
+The architecture is composed of two main Django apps:
 
-1.  **Phase 1: De-identification**: A standalone script, intended for a secure environment, processes raw Excel files to create a de-identified linkage key.
-2.  **Phase 2: Harmonization & Import**: A second process uses the linkage key to create a clean, unified dataset, which is then imported into a new Django web application for management and analysis.
+1.  **`sampletracking`**: The core wet-lab tracking system, adapted from the original `mgml_sampledb` project. It manages the physical sample hierarchy: `CrudeSample` -> `Aliquot` -> `Extract` -> `SequenceLibrary`.
+2.  **`analysis`**: A new application responsible for generating, storing, and managing the final, opaque `sample_id` used for bioinformatics analysis.
 
-## 2. Data Processing Pipeline
+## 2. The Django Web Application (`webapp/`)
 
-### De-identification (`deidentification_tool/`)
+The application provides a comprehensive web interface for managing the entire sample lifecycle.
 
-This self-contained Python script is the only component that ever handles Protected Health Information (PHI).
+### Data Models
 
--   **Input**: A collection of Excel files with inconsistent naming and overlapping data.
--   **Process**:
-    1.  It reads all sheets from all provided Excel files.
-    2.  It scans for columns containing patient identifiers (e.g., MRN, UPN, Internal ID).
-    3.  It intelligently links these different identifiers to a single unique individual.
-    4.  For each unique individual identified, it generates a new, random, and unique **Subject ID** (e.g., `SUBJ-407A9B19`).
--   **Output**: A sensitive file named `SECURE_linkage_key.csv` that maps the new `subject_id` to all of the original legacy identifiers. This file must be stored securely.
+The database schema is designed to provide a complete audit trail for every sample:
 
-### Harmonization (`sample_importer/` and `run_harmonization.py`)
+-   **`sampletracking` app**:
+    -   **`CrudeSample`**: The initial physical sample, identified by a scannable barcode.
+    -   **`Aliquot`**: An aliquot derived from a `CrudeSample`.
+    -   **`Extract`**: An extract (e.g., DNA, RNA, Protein) derived from an `Aliquot`.
+    -   **`SequenceLibrary`**: A sequencing library prepared from an `Extract`.
+    -   Each of these models has its own unique `barcode` to identify the physical item.
 
-This process takes the de-identified linkage key and the raw data to produce the final clean dataset.
+-   **`analysis` app**:
+    -   **`AnalysisID`**: Stores the final, analysis-ready `sample_id`. It uses a GenericForeignKey to link to the final sample object, which can be either an `Extract` (for terminal analyses like metabolomics) or a `SequenceLibrary`.
 
--   **Input**: The `SECURE_linkage_key.csv` and the original Excel files.
--   **Process**:
-    1.  It uses the linkage key to replace all legacy patient identifiers with the new de-identified `subject_id`.
-    2.  It standardizes column names (e.g., `Collection Date`, `collection_dt`, `sample_date` all become `collection_date`).
-    3.  It generates a unique **Sample Barcode** for each sample record (e.g., `SUBJ-407A9B19_2024-10-05_Stool`), which serves as the unique primary key for a sample.
--   **Output**: A clean, de-identified, and unified dataset named `harmonized_deidentified_samples.tsv`.
+### ID Generation
 
-## 3. The Django Web Application (`webapp/`)
+The system uses two distinct types of identifiers:
 
-A new Django application was built from the ground up to provide a web interface for the clean data.
+1.  **Physical Barcode**: A user-provided, scannable barcode that uniquely identifies each physical item (`CrudeSample`, `Aliquot`, etc.) in the wet lab.
+2.  **Analysis Sample ID**: A system-generated, opaque ID created at the end of the wet-lab process. This ID is used for all downstream bioinformatics and data tracking. It is randomly generated and includes a prefix based on the intended analysis type (e.g., `WGS_`, `MSS_`, `MET_`).
 
--   **Database Models**: The database schema is designed for clarity and scalability:
-    -   `Subject`: A table that stores the unique, de-identified `subject_id` for each person.
-    -   `CrudeSample`: A table that stores all information for a specific sample, including its unique `barcode`, `collection_date`, `sample_source`, and a foreign key that links it to a `Subject`.
--   **Data Import**: A custom management command, `import_samples`, was created. This command reads the `harmonized_deidentified_samples.tsv` file and populates the `Subject` and `CrudeSample` tables in the database.
--   **User Interface**: The application provides a full suite of basic features for data management:
-    -   A main page that lists all samples in the database.
-    -   A form for creating new samples.
-    -   Functionality to Edit and Delete existing samples.
-    -   A secure login/logout system.
-    -   A full-featured Admin Panel (`/admin`) for direct database management.
+### User Interface
 
-## 4. Relationship with `mgml_sampledb`
+The application provides a full-featured admin interface (`/admin`) for all data management, including:
 
-This is a key point of clarification: this new application is being built as a **modern, standalone replacement** for the existing `mgml_sampledb` application. It **does not** interface with or modify the old application directly.
+-   Registering and tracking samples through the wet-lab pipeline.
+-   A custom action to **Generate Analysis ID(s)** for selected `Extracts` or `SequenceLibraries` that are ready for analysis.
 
-Our strategy has been to **harmonize** the new application with the old one by incorporating its best features while building a better structure:
+## 3. Legacy Data Import Workflow
 
--   **Improved Database Design**: We have implemented a normalized database schema with separate `Subject` and `CrudeSample` tables. This is a more robust and scalable design than the original application's, and the intention is for this new structure to become the standard going forward.
--   **Consistent Naming**: Where it made sense, we have adopted the naming conventions from the old application. For example, our unique sample identifier is named `barcode` and the sample type is named `sample_source` to match the old system, which will make an eventual data migration much easier.
--   **Familiar Look and Feel**: We have copied the base HTML template and custom CSS from the old application. This ensures that when users begin using this new system, the interface will look and feel familiar, providing a seamless transition.
+A custom workflow has been developed to import thousands of existing legacy samples into the new system.
 
-The eventual goal is for this new application to completely replace the old one. The small amount of data in the existing `mgml_sampledb` can be migrated into this new, superior system when it is ready for production deployment.
+### Step 1: Prepare Your Data File
+
+1.  Following the original project's de-identification workflow, run the `deidentification_tool` on your raw Excel files to produce the `SECURE_linkage_key.csv`.
+2.  Then, run the `run_harmonization.py` script. This will use the linkage key and your raw data to produce the `harmonized_deidentified_samples.tsv` file.
+3.  **Crucially:** Open the `harmonized_deidentified_samples.tsv` file in a spreadsheet program and manually add the two new required columns:
+    -   `Extract Type` (e.g., DNA, RNA, Protein)
+    -   `Analysis Type` (e.g., WGS, MSS, PTM)
+    Fill these in for all your legacy samples and save the file.
+
+### Step 2: Run the Import
+
+Once your `.tsv` file is prepared and saved, open your terminal, navigate to the project root (`/home/david/projects/metagenome_sample_tracker/`), and run the following command:
+
+```bash
+python3.12 webapp/manage.py import_legacy_data /path/to/your/harmonized_deidentified_samples.tsv
+```
+
+**Remember to replace `/path/to/your/harmonized_deidentified_samples.tsv` with the actual path to your file.**
+
+The script will then process the entire file, create all the necessary placeholder records for your legacy samples, and generate a new, correctly-prefixed analysis `sample_id` for each one.
 
 ---
 
-## Appendix: De-identification Workflow on a Secure Computer
+## 4. TODO / Next Steps
 
-This section outlines the steps to run the de-identification process on a separate, secure computer (e.g., a hospital-approved Windows desktop).
+This section outlines important tasks to complete when resuming work on the project.
 
-**Prerequisites:**
-- Python must be installed on the computer. You can download it from the official Python website.
+-   **Run the Legacy Data Import**: The immediate next step is to prepare the `harmonized_deidentified_samples.tsv` file with the required extra columns and run the import command to populate the database with legacy data.
 
-**Steps:**
+-   **Configure User Groups & Permissions**: The application views currently require specific permissions to access. For the application to be usable by non-superusers, we need to use the Django admin interface to create user groups (e.g., "Lab Staff", "Bioinformatician", "Sample Collectors") and assign the correct model permissions (e.g., `sampletracking | extract | Can add extract`) to each group.
 
-1.  **Transfer the Tool**: Copy the entire `deidentification_tool` folder from this project to the secure computer.
+-   **Write Automated Tests**: The project currently lacks automated tests. We should create a suite of unit and integration tests to verify all functionality, especially the sample lifecycle logic and the legacy data import, to ensure the application is robust.
 
-2.  **Install Dependencies**:
-    -   Open a command prompt or PowerShell on the secure computer.
-    -   Navigate into the `deidentification_tool` folder.
-    -   Run the following command to install the necessary Python libraries:
-        ```
-        pip install -r requirements.txt
-        ```
+-   **Review and Refine Frontend**: After data has been imported, the web interface should be thoroughly tested to find and fix any broken links, styling issues, or pages that need to be adapted to the new integrated logic.
 
-3.  **Run the Script**:
-    -   In the same command prompt, while inside the `deidentification_tool` folder, run the script:
-        ```
-        python deidentify.py
-        ```
-
-4.  **Select Files**:
-    -   A file selection window will pop up.
-    -   Navigate to the location of your Excel files, select all the files you want to process, and click "Open".
-
-5.  **Retrieve the Output**:
-    -   The script will run and create the `SECURE_linkage_key.csv` file in the main project directory (one level above `deidentification_tool`).
-    -   This file contains the mapping between the original identifiers and the new, de-identified `subject_id`s.
-
-6.  **Secure Transfer**: Securely transfer this `SECURE_linkage_key.csv` file to your main development machine and place it in the root of the `metagenome_sample_tracker` project directory. It is now ready to be used by the `run_harmonization.py` script.
+-   **Plan for Production Deployment**: The current setup uses a development server and an SQLite database. Before the application is used by the full team, a production deployment plan is needed. This includes configuring a production-grade web server (like Gunicorn with Nginx) and migrating the database to the production MySQL server.

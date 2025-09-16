@@ -1,0 +1,357 @@
+{% extends 'base_generic.html' %}
+
+{% block title %}Register New Sample - MGML Laboratory{% endblock %}
+
+{% block content %}
+<style>
+    /* Mobile-optimized styles */
+    @media (max-width: 768px) {
+        .container {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        .card-body {
+            padding: 1rem !important;
+        }
+        .form-group label {
+            font-size: 0.95rem;
+        }
+        .form-control, .form-select {
+            font-size: 16px !important; /* Prevents zoom on iOS */
+            padding: 0.5rem !important;
+        }
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .btn-secondary {
+            margin-right: 0 !important;
+        }
+        h4 {
+            font-size: 1.3rem;
+        }
+        .lead {
+            font-size: 0.95rem !important;
+        }
+    }
+    
+    /* Larger touch targets for mobile */
+    input[type="text"], 
+    input[type="date"], 
+    select, 
+    textarea {
+        min-height: 44px;
+    }
+    
+    /* Better spacing for mobile */
+    .mobile-friendly {
+        margin-bottom: 1rem;
+    }
+    
+    /* Override checkbox box styling */
+    .override-box {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .override-text-container {
+        flex: 1;
+        padding-right: 1rem;
+    }
+    
+    .override-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+    
+    .override-help {
+        font-size: 0.875rem;
+        color: #6c757d;
+        line-height: 1.4;
+    }
+    
+    .override-checkbox-container {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-left: 1rem;
+    }
+    
+    .override-checkbox-container input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        margin: 0;
+    }
+    
+    /* Style for required field asterisks */
+    .font-weight-bold {
+        color: #333;
+    }
+    
+    label .text-danger {
+        color: #dc3545;
+        font-weight: bold;
+    }
+</style>
+<div class="container mt-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header text-white py-2" style="background-color: #5b9aa9;">
+                    <h4 class="mb-0">
+                        <i class="fas fa-vial"></i> {{ title }}
+                    </h4>
+                </div>
+                <div class="card-body py-2">
+                    <p class="lead text-muted mb-2">
+                        <i class="fas fa-info-circle"></i> Fill out this form at the time of sample collection. 
+                        The sample will be marked as "Awaiting Receipt" until received in the lab.
+                    </p>
+                    
+                    <form method="post" class="mt-2">
+                        {% csrf_token %}
+                        <div class="row">
+                            <!-- Subject ID -->
+                            <div class="col-md-6 mb-2 mobile-friendly">
+                                <div class="form-group">
+                                    <label for="{{ form.subject_id.id_for_label }}" class="font-weight-bold">
+                                        {{ form.subject_id.label }}
+                                    </label>
+                                    {{ form.subject_id }}
+                                    {% if form.subject_id.help_text %}
+                                        <small class="form-text text-muted">{{ form.subject_id.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.subject_id.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.subject_id.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Collection Date -->
+                            <div class="col-md-6 mb-2 mobile-friendly">
+                                <div class="form-group">
+                                    <label for="{{ form.collection_date.id_for_label }}" class="font-weight-bold">
+                                        {{ form.collection_date.label }}
+                                    </label>
+                                    {{ form.collection_date }}
+                                    {% if form.collection_date.help_text %}
+                                        <small class="form-text text-muted">{{ form.collection_date.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.collection_date.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.collection_date.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Sample Source -->
+                            <div class="col-md-6 mb-2 mobile-friendly">
+                                <div class="form-group">
+                                    <label for="{{ form.sample_source.id_for_label }}" class="font-weight-bold">
+                                        {{ form.sample_source.label }}
+                                    </label>
+                                    {{ form.sample_source }}
+                                    {% if form.sample_source.help_text %}
+                                        <small class="form-text text-muted">{{ form.sample_source.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.sample_source.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.sample_source.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Barcode -->
+                            <div class="col-md-6 mb-2 mobile-friendly">
+                                <div class="form-group">
+                                    <label for="{{ form.barcode.id_for_label }}" class="font-weight-bold">
+                                        {{ form.barcode.label }}
+                                    </label>
+                                    {{ form.barcode }}
+                                    {% if form.barcode.help_text %}
+                                        <small class="form-text text-muted">{{ form.barcode.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.barcode.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.barcode.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Source Details -->
+                            <div class="col-12 mb-2">
+                                <div class="form-group">
+                                    <label for="{{ form.source_details.id_for_label }}" class="font-weight-bold">
+                                        {{ form.source_details.label }}
+                                    </label>
+                                    {{ form.source_details }}
+                                    {% if form.source_details.help_text %}
+                                        <small class="form-text text-muted">{{ form.source_details.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.source_details.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.source_details.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Override Checkbox -->
+                            <div class="col-12 mb-2">
+                                <div class="form-group">
+                                    <div class="override-box d-flex align-items-start">
+                                        <div class="override-text-container">
+                                            <div class="override-title">Override barcode validation</div>
+                                            <div class="override-help">Check this if using generic pre-printed barcodes not specific to this subject</div>
+                                        </div>
+                                        <div class="override-checkbox-container">
+                                            {{ form.override_barcode_check }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Non-field errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mt-3 text-center">
+                            <a href="{% url 'home' %}" class="btn btn-sm btn-secondary mr-2">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus-circle"></i> Register Sample
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light py-1">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-clipboard-check"></i> Sample will be marked as <span class="badge badge-info">Awaiting Receipt</span>
+                        </small>
+                        <small class="text-muted">
+                            All fields marked with an asterisk (*) are required.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Focus on the first input field
+    const firstInput = document.querySelector('input[type="text"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Add Bootstrap classes to form elements if not already present
+    document.querySelectorAll('input, select, textarea').forEach(function(element) {
+        if (!element.classList.contains('form-control') && !element.classList.contains('form-select')) {
+            element.classList.add('form-control');
+        }
+    });
+    
+    // Real-time barcode validation
+    const barcodeInput = document.getElementById('id_barcode');
+    const subjectIdInput = document.getElementById('id_subject_id');
+    
+    function validateBarcode() {
+        // Skip validation if override is checked
+        const barcode = barcodeInput.value.toUpperCase();
+        const subjectId = subjectIdInput.value.toUpperCase();
+        
+        if (barcode && subjectId) {
+            if (barcode.startsWith(subjectId)) {
+                // Valid match
+                barcodeInput.classList.remove('is-invalid');
+                barcodeInput.classList.add('is-valid');
+                
+                // Remove any existing feedback
+                const existingFeedback = barcodeInput.parentElement.querySelector('.barcode-feedback');
+                if (existingFeedback) {
+                    existingFeedback.remove();
+                }
+                
+                // Add success feedback
+                const successDiv = document.createElement('div');
+                successDiv.className = 'valid-feedback barcode-feedback';
+                successDiv.innerHTML = '<i class="fas fa-check-circle"></i> Barcode matches Subject ID';
+                barcodeInput.parentElement.appendChild(successDiv);
+            } else {
+                // Invalid match
+                barcodeInput.classList.remove('is-valid');
+                barcodeInput.classList.add('is-invalid');
+                
+                // Remove any existing feedback
+                const existingFeedback = barcodeInput.parentElement.querySelector('.barcode-feedback');
+                if (existingFeedback) {
+                    existingFeedback.remove();
+                }
+                
+                // Add error feedback
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback barcode-feedback';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Entered Subject ID does not match the barcode Subject ID';
+                barcodeInput.parentElement.appendChild(errorDiv);
+            }
+        } else {
+            // Remove validation classes if either field is empty
+            barcodeInput.classList.remove('is-valid', 'is-invalid');
+            const existingFeedback = barcodeInput.parentElement.querySelector('.barcode-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+        }
+    }
+    
+    // Add event listeners
+    if (barcodeInput && subjectIdInput) {
+        barcodeInput.addEventListener('input', validateBarcode);
+        subjectIdInput.addEventListener('input', validateBarcode);
+        
+        // Also validate on blur
+        barcodeInput.addEventListener('blur', validateBarcode);
+        subjectIdInput.addEventListener('blur', validateBarcode);
+    }
+
+    // Logic for auto-creating aliquot
+    const autoCreateCheckbox = document.getElementById('id_auto_create_aliquot');
+    const aliquotBarcodeField = document.querySelector('#div_id_aliquot_barcode'); // Crispy forms wraps fields in a div
+
+    function toggleAliquotBarcode() {
+        if (aliquotBarcodeField) {
+            aliquotBarcodeField.style.display = autoCreateCheckbox.checked ? 'block' : 'none';
+        }
+    }
+
+    // Initial state on page load
+    if(autoCreateCheckbox) {
+        toggleAliquotBarcode();
+        // Listen for changes
+        autoCreateCheckbox.addEventListener('change', toggleAliquotBarcode);
+    }
+});
+</script>
+{% endblock %}ript>
+{% endblock %}

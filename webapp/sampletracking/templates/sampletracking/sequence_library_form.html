@@ -1,0 +1,260 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+<div class="container mt-3">
+    <div class="card shadow">
+        <div class="card-header bg-info text-white py-2">
+            <h4 class="mb-0">Submit a Sequence Library</h4>
+        </div>
+        <div class="card-body py-2">
+            <form method="post" class="mt-2">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Sample Information Column -->
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Sample Information</h5>
+                        
+                        {% if form.parent %}
+                        <div class="form-group mb-3">
+                            <label for="{{ form.parent.id_for_label }}" class="font-weight-bold">{{ form.parent.label }}</label>
+                            {{ form.parent }}
+                            {% if form.parent.help_text %}
+                                <small class="form-text text-muted">{{ form.parent.help_text }}</small>
+                            {% endif %}
+                            {% if form.parent.errors %}
+                                <div class="text-danger small">{{ form.parent.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if form.date_created %}
+                        <div class="form-group mb-3">
+                            <label for="{{ form.date_created.id_for_label }}" class="font-weight-bold">{{ form.date_created.label }}</label>
+                            {{ form.date_created }}
+                            {% if form.date_created.help_text %}
+                                <small class="form-text text-muted">{{ form.date_created.help_text }}</small>
+                            {% endif %}
+                            {% if form.date_created.errors %}
+                                <div class="text-danger small">{{ form.date_created.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if form.status %}
+                        <div class="form-group mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="font-weight-bold">{{ form.status.label }}</label>
+                            {{ form.status }}
+                            {% if form.status.help_text %}
+                                <small class="form-text text-muted">{{ form.status.help_text }}</small>
+                            {% endif %}
+                            {% if form.status.errors %}
+                                <div class="text-danger small">{{ form.status.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% for field in form %}
+                            {% if field.name != 'barcode' and field.name != 'parent' and field.name != 'date_created' and field.name != 'status' and field.name != 'freezer_ID' and field.name != 'container_type' and field.name != 'box_ID' and field.name != 'well_ID' and field.name != 'notes' and field.name != 'date_sequenced' and field.name != 'sequencing_platform' and field.name != 'sequencing_run_id' %}
+                                <div class="form-group mb-3">
+                                    <label for="{{ field.id_for_label }}" class="font-weight-bold">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="text-danger small">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Storage Information Column -->
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Storage Information</h5>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.freezer_ID.id_for_label }}" class="font-weight-bold">Freezer</label>
+                            {{ form.freezer_ID }}
+                            {% if form.freezer_ID.help_text %}
+                                <small class="form-text text-muted">{{ form.freezer_ID.help_text }}</small>
+                            {% endif %}
+                            {% if form.freezer_ID.errors %}
+                                <div class="text-danger small">{{ form.freezer_ID.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.container_type.id_for_label }}" class="font-weight-bold">Container Type</label>
+                            {{ form.container_type }}
+                            {% if form.container_type.help_text %}
+                                <small class="form-text text-muted">{{ form.container_type.help_text }}</small>
+                            {% endif %}
+                            {% if form.container_type.errors %}
+                                <div class="text-danger small">{{ form.container_type.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.box_ID.id_for_label }}" class="font-weight-bold">Container ID</label>
+                            {{ form.box_ID }}
+                            {% if form.box_ID.help_text %}
+                                <small class="form-text text-muted">{{ form.box_ID.help_text }}</small>
+                            {% endif %}
+                            {% if form.box_ID.errors %}
+                                <div class="text-danger small">{{ form.box_ID.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.well_ID.id_for_label }}" class="font-weight-bold">Well</label>
+                            {{ form.well_ID }}
+                            {% if form.well_ID.help_text %}
+                                <small class="form-text text-muted">{{ form.well_ID.help_text }}</small>
+                            {% endif %}
+                            {% if form.well_ID.errors %}
+                                <div class="text-danger small">{{ form.well_ID.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3" id="barcode-group">
+                            <label for="{{ form.barcode.id_for_label }}" class="font-weight-bold">
+                                <span id="barcode-label">New Sample Barcode</span>
+                            </label>
+                            {{ form.barcode }}
+                            <small class="form-text text-muted" id="barcode-help">
+                                <span class="box-storage-help">Scan the tube barcode</span>
+                                <span class="plate-storage-help" style="display:none;">Will be auto-generated from plate and well</span>
+                            </small>
+                            {% if form.barcode.errors %}
+                                <div class="text-danger small">{{ form.barcode.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.date_sequenced %}
+                        <div class="form-group mb-3">
+                            <label for="{{ form.date_sequenced.id_for_label }}" class="font-weight-bold">{{ form.date_sequenced.label }}</label>
+                            {{ form.date_sequenced }}
+                            {% if form.date_sequenced.help_text %}
+                                <small class="form-text text-muted">{{ form.date_sequenced.help_text }}</small>
+                            {% endif %}
+                            {% if form.date_sequenced.errors %}
+                                <div class="text-danger small">{{ form.date_sequenced.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if form.sequencing_platform %}
+                        <div class="form-group mb-3">
+                            <label for="{{ form.sequencing_platform.id_for_label }}" class="font-weight-bold">{{ form.sequencing_platform.label }}</label>
+                            {{ form.sequencing_platform }}
+                            {% if form.sequencing_platform.help_text %}
+                                <small class="form-text text-muted">{{ form.sequencing_platform.help_text }}</small>
+                            {% endif %}
+                            {% if form.sequencing_platform.errors %}
+                                <div class="text-danger small">{{ form.sequencing_platform.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if form.sequencing_run_id %}
+                        <div class="form-group mb-3">
+                            <label for="{{ form.sequencing_run_id.id_for_label }}" class="font-weight-bold">{{ form.sequencing_run_id.label }}</label>
+                            {{ form.sequencing_run_id }}
+                            {% if form.sequencing_run_id.help_text %}
+                                <small class="form-text text-muted">{{ form.sequencing_run_id.help_text }}</small>
+                            {% endif %}
+                            {% if form.sequencing_run_id.errors %}
+                                <div class="text-danger small">{{ form.sequencing_run_id.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Additional Information -->
+                {% if form.notes %}
+                <hr class="my-4">
+                <h5 class="mb-3">Additional Information</h5>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="font-weight-bold">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.help_text %}
+                                <small class="form-text text-muted">{{ form.notes.help_text }}</small>
+                            {% endif %}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="mt-3 text-center">
+                    <a href="{% url 'home' %}" class="btn btn-sm btn-secondary mr-2">Cancel</a>
+                    <button type="submit" class="btn btn-sm btn-info">
+                        <i class="fas fa-save"></i> Submit Library
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="card-footer text-muted py-1">
+            <small>All fields marked with an asterisk (*) are required.</small>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const containerTypeField = document.getElementById('id_container_type');
+    const barcodeField = document.getElementById('id_barcode');
+    const barcodeLabel = document.getElementById('barcode-label');
+    const boxHelp = document.querySelector('.box-storage-help');
+    const plateHelp = document.querySelector('.plate-storage-help');
+    const containerIdField = document.getElementById('id_box_ID');
+    const wellField = document.getElementById('id_well_ID');
+    
+    function updateBarcodeField() {
+        if (!containerTypeField || !barcodeField) return;
+        
+        if (containerTypeField.value === 'plate') {
+            // Plate storage - barcode will be auto-generated
+            if (barcodeLabel) barcodeLabel.textContent = 'New Sample Barcode (Auto-generated)';
+            barcodeField.readOnly = true;
+            barcodeField.style.backgroundColor = '#e9ecef';
+            if (boxHelp) boxHelp.style.display = 'none';
+            if (plateHelp) plateHelp.style.display = 'block';
+            
+            // Generate barcode if plate and well are filled
+            generatePlateBarcode();
+        } else {
+            // Box storage - user scans tube barcode
+            if (barcodeLabel) barcodeLabel.textContent = 'New Sample Barcode';
+            barcodeField.readOnly = false;
+            barcodeField.style.backgroundColor = '';
+            if (boxHelp) boxHelp.style.display = 'block';
+            if (plateHelp) plateHelp.style.display = 'none';
+        }
+    }
+    
+    function generatePlateBarcode() {
+        if (containerTypeField && containerIdField && wellField) {
+            if (containerTypeField.value === 'plate' && containerIdField.value && wellField.value) {
+                barcodeField.value = `PLATE:${containerIdField.value}:${wellField.value}`;
+            }
+        }
+    }
+    
+    // Listen for changes
+    if (containerTypeField) containerTypeField.addEventListener('change', updateBarcodeField);
+    if (containerIdField) containerIdField.addEventListener('input', generatePlateBarcode);
+    if (wellField) wellField.addEventListener('input', generatePlateBarcode);
+    
+    // Initialize on page load
+    updateBarcodeField();
+});
+</script>
+{% endblock %}
